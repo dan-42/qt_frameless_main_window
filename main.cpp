@@ -21,9 +21,13 @@ int main(int argc, char *argv[])
     windowWidth = 1024;
     windowHeight = 768;
 
-    frameless::frameless_window w{};
-    w.geometry({windowXPos, windowYPos, windowWidth, windowHeight});
-    w.show();
+    frameless::frameless_window w1{};
+    w1.geometry({windowXPos, windowYPos, windowWidth, windowHeight});
+    w1.show();
+
+    frameless::frameless_window w2{};
+    w2.geometry({windowXPos, windowYPos, windowWidth, windowHeight});
+    w2.show();
 
     return app.exec();
 }

@@ -61,8 +61,8 @@ public:
 
   HWND hWnd;
 
-  static HWND childWindow;
-  static QWidget* childWidget;
+  HWND childWindow;
+  QWidget* childWidget;
 
 private:
   struct sizeType
