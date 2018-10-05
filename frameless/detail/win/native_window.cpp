@@ -1,13 +1,48 @@
-#include "WinNativeWindow.h"
+/**
+SPDX-License-Identifier:  MIT
+Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+
+Permission is hereby  granted, free of charge, to any  person obtaining a copy
+of this software and associated  documentation files (the "Software"), to deal
+in the Software  without restriction, including without  limitation the rights
+to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
+copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
+IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
+FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
+AUTHORS  OR COPYRIGHT  HOLDERS  BE  LIABLE FOR  ANY  CLAIM,  DAMAGES OR  OTHER
+LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Copyright 2017 github.com/dfct
+Copyright 2018 github.com/dan-42
+*/
+
+#ifdef _MSC_VER
+#  pragma comment(lib, "Gdi32.lib")
+#endif
+
+#include <frameless/detail/win/native_window.hpp>
 
 #include <dwmapi.h>
 #include <stdexcept>
 
+namespace frameless
+{
+namespace detail
+{
+namespace win
+{
 
-HWND WinNativeWindow::childWindow = nullptr;
-QWidget* WinNativeWindow::childWidget = nullptr;
+HWND native_window::childWindow = nullptr;
+QWidget* native_window::childWidget = nullptr;
 
-WinNativeWindow::WinNativeWindow(const int x, const int y, const int width, const int height)
+native_window::native_window(const int x, const int y, const int width, const int height)
     : hWnd(nullptr)
 {
 
@@ -52,7 +87,7 @@ WinNativeWindow::WinNativeWindow(const int x, const int y, const int width, cons
 
 }
 
-WinNativeWindow::~WinNativeWindow()
+native_window::~native_window()
 {
     //Hide the window & send the destroy message
     ShowWindow(hWnd, SW_HIDE);
@@ -60,9 +95,9 @@ WinNativeWindow::~WinNativeWindow()
 }
 
 
-LRESULT CALLBACK WinNativeWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WinNativeWindow *window = reinterpret_cast<WinNativeWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    native_window *window = reinterpret_cast<native_window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     if (!window)
     {
@@ -217,43 +252,46 @@ LRESULT CALLBACK WinNativeWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void WinNativeWindow::setGeometry(const int x, const int y, const int width, const int height)
+void native_window::setGeometry(const int x, const int y, const int width, const int height)
 {
     MoveWindow(hWnd, x, y, width, height, 1);
 }
 
-void WinNativeWindow::setMinimumSize(const int width, const int height)
+void native_window::setMinimumSize(const int width, const int height)
 {
     this->minimumSize.required = true;
     this->minimumSize.width = width;
     this->minimumSize.height = height;
 }
 
-int WinNativeWindow::getMinimumWidth()
+int native_window::getMinimumWidth()
 {
     return minimumSize.width;
 }
 
-int WinNativeWindow::getMinimumHeight()
+int native_window::getMinimumHeight()
 {
     return minimumSize.height;
 }
 
 
-void WinNativeWindow::setMaximumSize(const int width, const int height)
+void native_window::setMaximumSize(const int width, const int height)
 {
     this->maximumSize.required = true;
     this->maximumSize.width = width;
     this->maximumSize.height = height;
 }
 
-int WinNativeWindow::getMaximumWidth()
+int native_window::getMaximumWidth()
 {
     return maximumSize.width;
 }
 
-int WinNativeWindow::getMaximumHeight()
+int native_window::getMaximumHeight()
 {
     return maximumSize.height;
 }
 
+} //namespace win
+} //namespace detail
+} //namespace frameless

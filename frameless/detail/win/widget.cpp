@@ -1,53 +1,34 @@
-/****************************************************************************
-**
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
-**
-** This file is part of the Qt Solutions component.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+/**
+SPDX-License-Identifier:  MIT
+Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 
-/* 																										 */
-/* 																										 */
-/* File is originally from https://github.com/qtproject/qt-solutions/tree/master/qtwinmigrate/src        */
-/* 																										 */
-/* It has been modified to support borderless window (HTTRANSPARENT) & to remove pre Qt5 cruft          */
-/* 																										 */
-/* 																										 */
+Permission is hereby  granted, free of charge, to any  person obtaining a copy
+of this software and associated  documentation files (the "Software"), to deal
+in the Software  without restriction, including without  limitation the rights
+to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
+copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
+THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
+IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
+FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
+AUTHORS  OR COPYRIGHT  HOLDERS  BE  LIABLE FOR  ANY  CLAIM,  DAMAGES OR  OTHER
+LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-#include "QWinWidget.h"
+Copyright 2013 Digia Plc and/or its subsidiary(-ies). BSD
+Copyright 2017 github.com/dfct
+Copyright 2018 github.com/dan-42
+*/
+
+#ifdef _MSC_VER
+ #pragma comment(lib, "user32.lib")
+#endif
+
+#include <frameless/detail/win/widget.hpp>
 
 #include <QApplication>
 #include <QEvent>
@@ -55,28 +36,35 @@
 #include <qt_windows.h>
 #include <QWindow>
 
+#include <Windows.h>
 
 /*!
-    \class QWinWidget qwinwidget.h
-    \brief The QWinWidget class is a Qt widget that can be child of a
+    \class widget widget.h
+    \brief The widget class is a Qt widget that can be child of a
     native Win32 widget.
 
-    The QWinWidget class is the bridge between an existing application
+    The widget class is the bridge between an existing application
     user interface developed using native Win32 APIs or toolkits like
     MFC, and Qt based GUI elements.
 
-    Using QWinWidget as the parent of QDialogs will ensure that
+    Using widget as the parent of QDialogs will ensure that
     modality, placement and stacking works properly throughout the
     entire application. If the child widget is a top level window that
-    uses the \c WDestructiveClose flag, QWinWidget will destroy itself
+    uses the \c WDestructiveClose flag, widget will destroy itself
     when the child window closes down.
 
-    Applications moving to Qt can use QWinWidget to add new
+    Applications moving to Qt can use widget to add new
     functionality, and gradually replace the existing interface.
 */
 
+namespace frameless
+{
+namespace detail
+{
+namespace win
+{
 
-QWinWidget::QWinWidget()
+widget::widget()
     : QWidget(nullptr),
       m_Layout(),
       p_Widget(nullptr),
@@ -86,7 +74,7 @@ QWinWidget::QWinWidget()
 {
 
     //Create a native window and give it geometry values * devicePixelRatio for HiDPI support
-    p_ParentWinNativeWindow = new WinNativeWindow(1  * window()->devicePixelRatio()
+    p_ParentWinNativeWindow = new native_window(1  * window()->devicePixelRatio()
         , 1 * window()->devicePixelRatio()
         , 1 * window()->devicePixelRatio()
         , 1 * window()->devicePixelRatio());
@@ -126,7 +114,7 @@ QWinWidget::QWinWidget()
     m_Layout.setSpacing(0);
 
     //Create the true app widget 
-    p_Widget = new Widget(this);
+    p_Widget = new widget_impl(this);
     m_Layout.addWidget(p_Widget);
     p_Widget->setParent(this, Qt::Widget);
     p_Widget->setVisible(true);
@@ -142,19 +130,19 @@ QWinWidget::QWinWidget()
 
 
     //You need to keep the native window in sync with the Qt window & children, so wire min/max/close buttons to 
-	//slots inside of QWinWidget. QWinWidget can then talk with the native window as needed 
+  //slots inside of widget. widget can then talk with the native window as needed
 	if (p_Widget->minimizeButton)
 	{
-		connect(p_Widget->minimizeButton, &QPushButton::clicked, this, &QWinWidget::onMinimizeButtonClicked);
+    connect(p_Widget->minimizeButton, &QPushButton::clicked, this, &widget::onMinimizeButtonClicked);
 	}
 	if (p_Widget->maximizeButton)
 	{
-		connect(p_Widget->maximizeButton, &QPushButton::clicked, this, &QWinWidget::onMaximizeButtonClicked);
+    connect(p_Widget->maximizeButton, &QPushButton::clicked, this, &widget::onMaximizeButtonClicked);
 
 	}
 	if (p_Widget->closeButton)
 	{
-		connect(p_Widget->closeButton, &QPushButton::clicked, this, &QWinWidget::onCloseButtonClicked);
+    connect(p_Widget->closeButton, &QPushButton::clicked, this, &widget::onCloseButtonClicked);
 	}
 
 	
@@ -168,7 +156,7 @@ QWinWidget::QWinWidget()
 /*!
     Destroys this object, freeing all allocated resources.
 */
-QWinWidget::~QWinWidget()
+widget::~widget()
 {
 
 }
@@ -176,7 +164,7 @@ QWinWidget::~QWinWidget()
 /*!
     Returns the handle of the native Win32 parent window.
 */
-HWND QWinWidget::getParentWindow() const
+HWND widget::getParentWindow() const
 {
     return m_ParentNativeWindowHandle;
 }
@@ -184,7 +172,7 @@ HWND QWinWidget::getParentWindow() const
 /*!
     \reimp
 */
-void QWinWidget::childEvent(QChildEvent *e)
+void widget::childEvent(QChildEvent *e)
 {
     QObject *obj = e->child();
     if (obj->isWidgetType()) {
@@ -202,7 +190,7 @@ void QWinWidget::childEvent(QChildEvent *e)
 }
 
 /*! \internal */
-void QWinWidget::saveFocus()
+void widget::saveFocus()
 {
     if (!_prevFocus)
         _prevFocus = ::GetFocus();
@@ -215,7 +203,7 @@ void QWinWidget::saveFocus()
 
     \sa showCentered()
 */
-void QWinWidget::show()
+void widget::show()
 {
     ShowWindow(m_ParentNativeWindowHandle, true);
     saveFocus();
@@ -228,7 +216,7 @@ void QWinWidget::show()
     correctly over their native parent windows.
 
     \code
-    QWinWidget qwin(hParent);
+    widget qwin(hParent);
     qwin.center();
 
     QMessageBox::information(&qwin, "Caption", "Information Text");
@@ -236,11 +224,11 @@ void QWinWidget::show()
 
     This will center the message box over the client area of hParent.
 */
-void QWinWidget::center()
+void widget::center()
 {
     const QWidget *child = findChild<QWidget*>();
     if (child && !child->isWindow()) {
-        qWarning("QWinWidget::center: Call this function only for QWinWidgets with toplevel children");
+        qWarning("widget::center: Call this function only for widgets with toplevel children");
     }
     RECT r;
     GetWindowRect(m_ParentNativeWindowHandle, &r);
@@ -252,13 +240,13 @@ void QWinWidget::center()
 
     Call center() instead.
 */
-void QWinWidget::showCentered()
+void widget::showCentered()
 {
     center();
     show();
 }
 
-void QWinWidget::setGeometry(int x, int y, int w, int h)
+void widget::setGeometry(int x, int y, int w, int h)
 {
     p_ParentWinNativeWindow->setGeometry(x * window()->devicePixelRatio()
 		, y * window()->devicePixelRatio()
@@ -271,7 +259,7 @@ void QWinWidget::setGeometry(int x, int y, int w, int h)
     was shown, or if there was no previous window, sets the focus to
     the parent window.
 */
-void QWinWidget::resetFocus()
+void widget::resetFocus()
 {
     if (_prevFocus)
         ::SetFocus(_prevFocus);
@@ -280,13 +268,13 @@ void QWinWidget::resetFocus()
 }
 
 //Tell the parent native window to minimize
-void QWinWidget::onMinimizeButtonClicked()
+void widget::onMinimizeButtonClicked()
 {
     SendMessage(m_ParentNativeWindowHandle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 }
 
 //Tell the parent native window to maximize or restore as appropriate
-void QWinWidget::onMaximizeButtonClicked()
+void widget::onMaximizeButtonClicked()
 {
     if (p_Widget->maximizeButton->isChecked())
     {
@@ -298,7 +286,7 @@ void QWinWidget::onMaximizeButtonClicked()
     }
 }
 
-void QWinWidget::onCloseButtonClicked()
+void widget::onCloseButtonClicked()
 {
     if(true /* put your check for it if it safe to close your app here */) //eg, does the user need to save a document
     {
@@ -314,7 +302,7 @@ void QWinWidget::onCloseButtonClicked()
     }
 }
 
-bool QWinWidget::nativeEvent(const QByteArray &, void *message, long *result)
+bool widget::nativeEvent(const QByteArray &, void *message, long *result)
 {
     MSG *msg = (MSG *)message;
 
@@ -448,7 +436,7 @@ bool QWinWidget::nativeEvent(const QByteArray &, void *message, long *result)
 /*!
     \reimp
 */
-bool QWinWidget::eventFilter(QObject *o, QEvent *e)
+bool widget::eventFilter(QObject *o, QEvent *e)
 {
     QWidget *w = (QWidget*)o;
 
@@ -497,7 +485,7 @@ bool QWinWidget::eventFilter(QObject *o, QEvent *e)
 
 /*! \reimp
 */
-void QWinWidget::focusInEvent(QFocusEvent *e)
+void widget::focusInEvent(QFocusEvent *e)
 {
     QWidget *candidate = this;
 
@@ -528,7 +516,7 @@ void QWinWidget::focusInEvent(QFocusEvent *e)
 
 /*! \reimp
 */
-bool QWinWidget::focusNextPrevChild(bool next)
+bool widget::focusNextPrevChild(bool next)
 {
     QWidget *curFocus = focusWidget();
     if (!next) {
@@ -562,3 +550,7 @@ bool QWinWidget::focusNextPrevChild(bool next)
 
     return true;
 }
+
+} //namespace win
+} //namespace detail
+} //namespace frameless
