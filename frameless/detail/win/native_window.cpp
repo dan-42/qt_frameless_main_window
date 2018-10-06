@@ -39,9 +39,8 @@ namespace detail
 namespace win
 {
 native_window::native_window(const int x, const int y, const int width, const int height)
-  : hWnd(nullptr)
-  , childWindow{nullptr}
-  , childWidget{nullptr}
+  : hWnd(nullptr)  
+  , flag_size_chaning_{false}
 {
   //The native window technically has a background color. You can set it here
   HBRUSH windowBackground = CreateSolidBrush(RGB(255, 255, 255));
@@ -125,9 +124,9 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
       //If the parent window gets any close messages, send them over to QWinWidget and don't actually close here
     case WM_CLOSE:
     {
-      if (window && window->childWindow)
+      if (window)
       {
-        SendMessage(window->childWindow, WM_CLOSE, 0, 0);
+        emit window->close_event();
         return 0;
       }
       break;
@@ -141,7 +140,7 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
     case WM_NCHITTEST:
     {
 
-      const LONG borderWidth = 8 * window->childWidget->window()->devicePixelRatio(); //This value can be arbitrarily large as only intentionally-HTTRANSPARENT'd messages arrive here
+      const LONG borderWidth = 8 * window->device_pixel_ratio_; //This value can be arbitrarily large as only intentionally-HTTRANSPARENT'd messages arrive here
       RECT winrect;
       GetWindowRect(hWnd, &winrect);
       long x = GET_X_LPARAM(lParam);
@@ -187,7 +186,7 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
         return HTBOTTOM;
       }
       //top border
-      if (y >= winrect.top && y < winrect.top + borderWidth)
+      if (y >= winrect.top && y < winrect.top + 2)
       {
         return HTTOP;
       }
@@ -201,31 +200,12 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
       //When this native window changes size, it needs to manually resize the QWinWidget child
     case WM_SIZE:
     {
-      RECT winrect;
-      GetClientRect(hWnd, &winrect);
-
-      WINDOWPLACEMENT wp;
-      wp.length = sizeof(WINDOWPLACEMENT);
-      GetWindowPlacement(hWnd, &wp);
-      if (window && window->childWidget)
+      if(window)
       {
-        if (wp.showCmd == SW_MAXIMIZE)
-        {
-          window->childWidget->setGeometry(8, 8 //Maximized window draw 8 pixels off screen
-                                   , winrect.right /window-> childWidget->window()->devicePixelRatio() - 16
-                                   , winrect.bottom / window->childWidget->window()->devicePixelRatio() - 16);
-        }
-        else
-        {
-          window->childWidget->setGeometry(0, 0
-                                   , winrect.right / window->childWidget->window()->devicePixelRatio()
-                                   , winrect.bottom / window->childWidget->window()->devicePixelRatio());
-        }
+        window->update();
       }
-
       break;
     }
-
     case WM_GETMINMAXINFO:
     {
       MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
@@ -248,7 +228,47 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
 
 void native_window::setGeometry(const int x, const int y, const int width, const int height)
 {
+  if(!flag_size_chaning_)
+  {
+    flag_size_chaning_ = true;
     MoveWindow(hWnd, x, y, width, height, 1);
+    flag_size_chaning_ = false;
+  }
+}
+
+auto native_window::device_pixel_ratio(long r) -> void
+{
+  device_pixel_ratio_ = r;
+}
+
+auto native_window::update() -> void
+{
+  RECT winrect;
+  GetClientRect(hWnd, &winrect);
+
+  WINDOWPLACEMENT wp;
+  wp.length = sizeof(WINDOWPLACEMENT);
+  GetWindowPlacement(hWnd, &wp);
+
+  if (wp.showCmd == SW_MAXIMIZE)
+  {
+    const auto border = 8 * device_pixel_ratio_;
+    emit geometry_changed(
+        border
+      , border
+      , winrect.right -  (2 * border)
+      , winrect.bottom - (2 * border)
+    );
+  }
+  else
+  {
+    emit geometry_changed(0, 0, winrect.right,  winrect.bottom);
+  }
+}
+
+auto native_window::native_handle() const -> HWND
+{
+  return hWnd;
 }
 
 void native_window::setMinimumSize(const int width, const int height)

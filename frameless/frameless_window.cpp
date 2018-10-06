@@ -61,10 +61,16 @@ auto frameless_window::show() -> void
 
 ///
 ///
-auto frameless_window::geometry(const geometry_type& g) -> void
+auto frameless_window::geometry(int x, int y, int w, int h) -> void
 {
-  impl_->setGeometry(g.pos_x, g.pos_y, g.width, g.height);
+  impl_->setGeometry(x, y, w, h);
 }
 
+///
+///
+auto frameless_window::content(QWidget* c) -> void
+{
+  impl_->content(c);
+}
 
 } //namespace frameless

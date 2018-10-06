@@ -30,6 +30,7 @@ Copyright 2018 github.com/dan-42
 #include "Windows.h"
 #include "Windowsx.h"
 
+#include <QObject>
 #include <QWidget>
 
 namespace frameless
@@ -39,8 +40,9 @@ namespace detail
 namespace win
 {
 
-class native_window
+class native_window : public QObject
 {
+  Q_OBJECT
 public:
   native_window(const int x, const int y, const int width, const int height);
   ~native_window();
@@ -57,12 +59,17 @@ public:
   int getMaximumHeight();
   int getMaximumWidth();
   void setGeometry(const int x, const int y, const int width, const int height);
+  auto device_pixel_ratio(long r) -> void;
+  auto update() -> void;
+  auto native_handle() const -> HWND;
+signals:
+  void close_event();
+  void geometry_changed(int , int , int , int);
+public:
 
 
-  HWND hWnd;
-
-  HWND childWindow;
-  QWidget* childWidget;
+  HWND hWnd;  
+  bool flag_size_chaning_;
 
 private:
   struct sizeType
@@ -79,6 +86,7 @@ private:
   sizeType minimumSize;
   sizeType maximumSize;
 
+  long device_pixel_ratio_;
   DWORD aero_borderless = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
 };
 } //namespace win

@@ -23,33 +23,41 @@ Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
+#pragma once
 #ifndef FRAMELESS_WIDGET_H
 #define FRAMELESS_WIDGET_H
 
-#include <QMainWindow>
+#include <QWidget>
 #include <QPushButton>
 #include <QToolBar>
 
+class QResizeEvent;
 
 namespace frameless
 {
 namespace detail
 {
 
-class widget_impl : public QMainWindow
+class widget_impl : public QWidget
 {
     Q_OBJECT
 public:
-    explicit widget_impl(QWidget *parent = 0);
+  explicit widget_impl(QWidget *parent = nullptr);
 	
-	//If you want to have Max/Min/Close buttons, look at how QWinWidget uses these 
+  auto content(QWidget* c) -> void;
+
 	QPushButton* maximizeButton = nullptr;
+  QPushButton* restoreButton = nullptr;
 	QPushButton* minimizeButton = nullptr;
-	QPushButton* closeButton = nullptr;
-	
-	//If you want to enable dragging the window when the mouse is over top of, say, a QToolBar, 
-	//then look at how QWinWidget uses this
-	QToolBar* toolBar = nullptr;
+  QPushButton* closeButton = nullptr;
+
+public:
+  QWidget* buttons_;
+  QWidget* top_drag_area_;
+private:
+  ///
+  ///
+  auto resizeEvent(QResizeEvent *event) -> void override;
 };
 
 } //namespace detail

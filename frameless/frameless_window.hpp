@@ -25,6 +25,7 @@ Copyright 2018 github.com/dan-42
 #ifndef FRAMELESS_WINDOW_HPP
 #define FRAMELESS_WINDOW_HPP
 
+#include <QObject>
 #include <memory>
 
 #ifdef _WIN32
@@ -41,19 +42,13 @@ namespace frameless { namespace detail {
 }}
 #endif
 
+class QWidget;
 namespace frameless
 {
 
-struct geometry_type
+class frameless_window : public QObject
 {
-  int pos_x{};
-  int pos_y{};
-  int width{};
-  int height{};
-};
-
-class frameless_window
-{
+  Q_OBJECT
 public:
   ///
   /// \brief frameless_window
@@ -73,7 +68,49 @@ public:
   ///
   ///
   ///
-  auto geometry(const geometry_type& g) -> void;
+  auto hide() -> void;
+
+  ///
+  ///
+  ///
+  auto geometry(int x, int y, int w, int h) -> void;
+
+  ///
+  ///
+  ///
+  auto content(QWidget* c) -> void;
+
+  ///
+  ///
+  ///
+  auto minimize() -> void;
+
+  ///
+  ///
+  ///
+  auto maximize() -> void;
+
+  ///
+  ///
+  ///
+  auto restore() -> void;
+
+  ///
+  ///
+  ///
+  auto close() -> void;
+
+signals:
+  ///
+  ///
+  ///
+  void on_restore();
+
+  ///
+  ///
+  ///
+  void on_maximize();
+
 
 private:
   std::unique_ptr<detail::widget_type> impl_;

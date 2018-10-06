@@ -34,83 +34,105 @@ namespace detail
 {
 
 widget_impl::widget_impl(QWidget *parent)
-	: QMainWindow(parent)
+  : QWidget(parent)
 {
+  {
+    buttons_ = new QWidget{this};
+    QPalette Pal(palette());
+    Pal.setColor(QPalette::Background, Qt::red);
+    buttons_->setAutoFillBackground(true);
+    buttons_->setPalette(Pal);
+    buttons_->setFixedSize(200, 30);
+    buttons_->show();
+    buttons_->setGeometry(this->width()-buttons_->width(), 0, 200, 30);
+  }
+  {
+    top_drag_area_ = new QWidget{this};
+    QPalette Pal(palette());
+    Pal.setColor(QPalette::Background, Qt::red);
+    top_drag_area_->setAutoFillBackground(true);
+    top_drag_area_->setPalette(Pal);
+    top_drag_area_->show();
+    top_drag_area_->setGeometry(0, 0, this->width(), 18);
 
-	//Set a black background for funsies
-	QPalette Pal(palette());
-	Pal.setColor(QPalette::Background, Qt::blue);
-	setAutoFillBackground(true);
-	setPalette(Pal);
+    QWidget* leftSpacer = new QWidget;
+    leftSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
+    leftSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    leftSpacer->setStyleSheet("background-color: none; border: none;");
+    leftSpacer->show();
 
-	//Windows example of adding a toolbar + min/max/close buttons
-#ifdef _WIN32
-
-	//Add the toolbar
-	toolBar = new QToolBar(this);
-	toolBar->setMovable(false);
-	toolBar->setFloatable(false);
-	addToolBar(toolBar);
-
-	//Create a transparent-to-mouse-events widget that pads right for a fixed width equivalent to min/max/close buttons
-	QWidget* btnSpacer = new QWidget(toolBar);
-	btnSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
-	btnSpacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-	btnSpacer->setStyleSheet("background-color: none; border: none;");
-	btnSpacer->setFixedWidth(135 /* rough width of close/min/max buttons */);
-	toolBar->addWidget(btnSpacer);
-
-
-	//Create a title label just because
-	QLabel* titleLabel = new QLabel("TrueFramelessWindow");
-	titleLabel->setFixedWidth(160);
-
-	//Set it transparent to mouse events such that you can click and drag when moused over the label
-	titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
-
+    auto layout = new QHBoxLayout{};
+    layout->setSpacing(0);
+    layout->setMargin(0);
+    layout->addWidget(leftSpacer);
+    top_drag_area_->setLayout(layout);
+  }
 
 	//Create spacer widgets to keep the title centered
-	QWidget* leftSpacer = new QWidget(toolBar);
-	QWidget* rightSpacer = new QWidget(toolBar);
-
-	//Set them transparent to mouse events + auto-expanding in size
+  QWidget* leftSpacer = new QWidget(buttons_);
 	leftSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
 	leftSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	leftSpacer->setStyleSheet("background-color: none; border: none;");
-	rightSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
-	rightSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	rightSpacer->setStyleSheet("background-color: none; border: none;");
 
-	//Add spacers & title label
-	toolBar->addWidget(leftSpacer);
-	toolBar->addWidget(titleLabel);
-	toolBar->addWidget(rightSpacer);
-
-
+  const auto config_button = [](auto& button, const auto& txt)
+  {
+    const QString button_style = {"background-color: none; border: none;"};
+    QFont font(QStringLiteral("Segoe MDL2 Assets"));
+    font.setStyleHint(QFont::Monospace);
+    button->setStyleSheet(button_style);
+    button->setFont(font);
+    button->setText(QString::fromUtf8(txt));
+    button->setFixedSize(45, 30);
+  };
 	//Create the min/max/close buttons
-	minimizeButton = new QPushButton("-");
-	maximizeButton = new QPushButton("O");
-	closeButton = new QPushButton("X");
+  minimizeButton = new QPushButton{};
+  maximizeButton = new QPushButton{};
+  restoreButton = new QPushButton{};
+  closeButton = new QPushButton{};
 
-	maximizeButton->setCheckable(true);
+  config_button(minimizeButton, u8"\uE921");
+  config_button(maximizeButton, u8"\uE922");
+  config_button(restoreButton, u8"\uE923");
+  config_button(closeButton, u8"\uE8BB");
 
-	minimizeButton->setFixedSize(45, 28);
-	maximizeButton->setFixedSize(45, 28);
-	closeButton->setFixedSize(45, 28);
-
-	toolBar->addWidget(minimizeButton);
-	toolBar->addWidget(maximizeButton);
-	toolBar->addWidget(closeButton);
-	toolBar->layout()->setAlignment(minimizeButton, Qt::AlignTop);
-	toolBar->layout()->setAlignment(maximizeButton, Qt::AlignTop);
-	toolBar->layout()->setAlignment(closeButton, Qt::AlignTop);
-
-	//An actual app should use icons for the buttons instead of text
-	//and style the different button states / widget margins in css
-
-#endif
-
+  auto buttons_layout = new QHBoxLayout{};
+  buttons_layout->setSpacing(0);
+  buttons_layout->setMargin(0);
+  buttons_layout->addWidget(leftSpacer);
+  buttons_layout->addWidget(minimizeButton);
+  buttons_layout->addWidget(restoreButton);
+  buttons_layout->addWidget(maximizeButton);
+  buttons_layout->addWidget(closeButton);
+  buttons_layout->setAlignment(minimizeButton, Qt::AlignTop);
+  buttons_layout->setAlignment(restoreButton, Qt::AlignTop);
+  buttons_layout->setAlignment(maximizeButton, Qt::AlignTop);
+  buttons_layout->setAlignment(closeButton, Qt::AlignTop);
+  buttons_->setLayout(buttons_layout);
 }
+
+///
+///
+auto widget_impl::content(QWidget* c) -> void
+{
+  if(!layout())
+  {
+    auto l = new QHBoxLayout;
+    l->setMargin(0);
+    setLayout(l);
+  }
+  layout()->addWidget(c);
+  top_drag_area_->raise();
+  buttons_->raise();
+}
+
+///
+///
+auto widget_impl::resizeEvent(QResizeEvent* event) -> void
+{
+  buttons_->move(this->width()-buttons_->width(), 0);
+  top_drag_area_->setGeometry(0, 0, width(), 18);
+}
+
 
 } //namespace detail
 } //namespace frameless

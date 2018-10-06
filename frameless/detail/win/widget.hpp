@@ -50,13 +50,14 @@ public:
 
     void show();
     void center();
-    void showCentered();
     void setGeometry(int x, int y, int w, int h);
+    auto content(QWidget* c) -> void;
 
     HWND getParentWindow() const;
 
 public slots:
     void onMaximizeButtonClicked();
+    void onRestoreButtonClicked();
     void onMinimizeButtonClicked();
     void onCloseButtonClicked();
 
@@ -73,8 +74,7 @@ private:
 
     widget_impl* p_Widget;
 
-    native_window* p_ParentWinNativeWindow;
-    HWND m_ParentNativeWindowHandle;
+    native_window* native_window_;
 
     HWND _prevFocus;
     bool _reenableParent;
