@@ -23,36 +23,34 @@
 
 QT += core gui widgets
 
-TARGET = TrueFramelessWindow
+TARGET = frameless_window
 TEMPLATE = app
 
 SOURCES += \
   $$files(*.cpp) \
   $$files(frameless/*.cpp) \
-  $$files(frameless/detail/*.cpp) \
-    user_content.cpp
+  $$files(frameless/detail/*.cpp)
 
 HEADERS += \
   $$files(*.hpp) \
   $$files(frameless/*.hpp) \
-  $$files(frameless/detail/*.hpp) \
-    user_content.hpp
+  $$files(frameless/detail/*.hpp)
 
 win32 {
-    # Only include / compile these files on Windows
-    SOURCES += $$files(frameless/detail/win/*.cpp)
-    HEADERS += $$files(frameless/detail/win/*.hpp)
+  # Only include / compile these files on Windows
+  SOURCES += $$files(frameless/detail/win/*.cpp)
+  HEADERS += $$files(frameless/detail/win/*.hpp)
 }
 
 mac {
-    # Only include / compile these files on OS X
-    OBJECTIVE_SOURCES += $$files(frameless/detail/osx/*.mm)
-    HEADERS  += $$files(frameless/detail/osx/*.hpp)
+  # Only include / compile these files on OS X
+  OBJECTIVE_SOURCES += $$files(frameless/detail/osx/*.mm)
+  HEADERS  += $$files(frameless/detail/osx/*.hpp)
 
-    # Additionally include Cocoa for OS X code
-    LIBS += -framework Foundation -framework Cocoa
-    INCLUDEPATH += /System/Library/Frameworks/Foundation.framework/Versions/C/Headers
+  # Additionally include Cocoa for OS X code
+  LIBS += -framework Foundation -framework Cocoa
+  INCLUDEPATH += /System/Library/Frameworks/Foundation.framework/Versions/C/Headers
 }
 
 FORMS += \
-    user_content.ui
+  $$files(*.ui)

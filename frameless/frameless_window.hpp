@@ -53,7 +53,7 @@ public:
   ///
   /// \brief frameless_window
   ///
-  frameless_window();
+  frameless_window(QWidget* content);
 
   ///
   ///
@@ -69,16 +69,6 @@ public:
   ///
   ///
   auto hide() -> void;
-
-  ///
-  ///
-  ///
-  auto geometry(int x, int y, int w, int h) -> void;
-
-  ///
-  ///
-  ///
-  auto content(QWidget* c) -> void;
 
   ///
   ///
@@ -99,6 +89,16 @@ public:
   ///
   ///
   auto close() -> void;
+
+  ///
+  ///
+  ///
+  auto geometry(const QRect& g) -> void;
+
+  ///
+  ///
+  ///
+  auto add_draggable_areas(const std::vector<QWidget*>& areas) -> void;
 
 signals:
   ///

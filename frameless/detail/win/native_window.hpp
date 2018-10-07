@@ -27,10 +27,10 @@ Copyright 2018 github.com/dan-42
 #ifndef FRAMELESS_native_window_H
 #define FRAMELESS_native_window_H
 
-#include "Windows.h"
-#include "Windowsx.h"
+#include <Windows.h>
 
 #include <QObject>
+#include <QSize>
 #include <QWidget>
 
 namespace frameless
@@ -44,37 +44,87 @@ class native_window : public QObject
 {
   Q_OBJECT
 public:
-  native_window(const int x, const int y, const int width, const int height);
-  ~native_window();
+  ///
+  ///
+  ///
+  native_window(const QRect& rect);
 
-  static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+  ///
+  ///
+  ///
+  ~native_window() noexcept;
 
+  ///
+  ///
+  ///
+  auto minimum_size(const QSize& size) -> void;
 
-  //These six functions exist to restrict native window resizing to whatever you want your app minimum/maximum size to be
-  void setMinimumSize(const int width, const int height);
-  int getMinimumHeight();
-  int getMinimumWidth();
+  ///
+  ///
+  ///
+  auto maximum_size(const QSize& size) -> void;
 
-  void setMaximumSize(const int width, const int height);
-  int getMaximumHeight();
-  int getMaximumWidth();
-  void setGeometry(const int x, const int y, const int width, const int height);
+  ///
+  ///
+  ///
+  auto geometry(const QRect& g) -> void;
+
+  ///
+  ///
+  ///
   auto device_pixel_ratio(long r) -> void;
-  auto update() -> void;
+
+  ///
+  ///
+  ///
   auto native_handle() const -> HWND;
+
+  ///
+  ///
+  ///
+  auto update() -> void;
+
+  ///
+  ///
+  ///
+  auto saveFocus() -> void;
+
+  ///
+  ///
+  ///
+  auto resetFocus() -> void;
+
 signals:
+  ///
+  ///
+  ///
   void close_event();
-  void geometry_changed(int , int , int , int);
-public:
 
+  ///
+  ///
+  ///
+  void geometry_changed(const QRect& rect);
 
-  HWND hWnd;  
-  bool flag_size_chaning_;
+  ///
+  ///
+  ///
+  void on_restore();
+
+  ///
+  ///
+  ///
+  void on_maximize();
+
+private:
+  ///
+  ///
+  ///
+  static LRESULT CALLBACK WndProc(HWND native_window_handle_, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   struct sizeType
   {
-      sizeType()
+      inline sizeType()
         : required(false), width(0), height(0)
       {
       }
@@ -83,11 +133,13 @@ private:
       int height;
   };
 
-  sizeType minimumSize;
-  sizeType maximumSize;
-
+  HWND native_window_handle_;
+  HWND prev_focus_;
+  DWORD aero_borderless_ = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
+  bool flag_size_chaning_;
   long device_pixel_ratio_;
-  DWORD aero_borderless = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
+  sizeType minimum_size_;
+  sizeType maximum_size_;
 };
 } //namespace win
 } //namespace detail

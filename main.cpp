@@ -2,6 +2,7 @@
 #include <QPalette>
 #include <QWidget>
 #include <frameless/frameless_window.hpp>
+#include <frameless/windows10.hpp>
 
 int main(int argc, char *argv[])
 {    
@@ -14,32 +15,34 @@ int main(int argc, char *argv[])
 
   QApplication app(argc, argv);
 
-  //A common feature is to save your app's geometry on close such that you can draw in the same place on relaunch
-  //Thus this project supports specifying the X/Y/Width/Height in a cross-platform manner
-  int windowXPos, windowYPos, windowWidth, windowHeight;
-  windowXPos = 100;
-  windowYPos = 100;
-  windowWidth = 1024;
-  windowHeight = 768;
 
-  frameless::frameless_window w1{};
-  w1.geometry(windowXPos, windowYPos, windowWidth, windowHeight);
-  w1.show();
+  const auto start_up_size_pos = QRect{100, 100, 1024, 768};
 
-  {
-  auto content = new QWidget{};
+  auto content = new QWidget{};  
   QPalette Pal;
   Pal.setColor(QPalette::Background, Qt::green);
   content->setAutoFillBackground(true);
   content->setPalette(Pal);
-  content->show();
-  w1.content(content);
-  }
 
+  auto win10_look = new frameless::windows10;
+  win10_look->content(content);
 
-//    frameless::frameless_window w2{};
-//    w2.geometry({windowXPos, windowYPos, windowWidth, windowHeight});
-//    w2.show();
+  frameless::frameless_window w1{win10_look};
+  QObject::connect(win10_look, &frameless::windows10::maximize, [&w1](){ w1.maximize(); });
+  QObject::connect(win10_look, &frameless::windows10::minimize, [&w1](){ w1.minimize(); });
+  QObject::connect(win10_look, &frameless::windows10::restore,  [&w1](){ w1.restore(); });
+  QObject::connect(win10_look, &frameless::windows10::close,    [&w1]()
+  {
+    w1.close();
+    QApplication::quit();
+  });
+  QObject::connect(&w1, &frameless::frameless_window::on_restore,   [&win10_look](){ win10_look->restored(); });
+  QObject::connect(&w1, &frameless::frameless_window::on_maximize,  [&win10_look](){ win10_look->maximized(); });
+
+  w1.add_draggable_areas(win10_look->draggable_widgets());
+  w1.geometry(start_up_size_pos);
+  w1.show();
+
 
   return app.exec();
 }

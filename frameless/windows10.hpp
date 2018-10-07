@@ -28,39 +28,66 @@ Copyright 2018 github.com/dan-42
 #define FRAMELESS_WIDGET_H
 
 #include <QWidget>
-#include <QPushButton>
-#include <QToolBar>
+
 
 class QResizeEvent;
+class QPushButton;
 
 namespace frameless
 {
-namespace detail
-{
 
-class widget_impl : public QWidget
+class windows10 : public QWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-  explicit widget_impl(QWidget *parent = nullptr);
+  ///
+  ///
+  ///
+  explicit windows10();
 	
+  ///
+  ///
+  ///
   auto content(QWidget* c) -> void;
 
-	QPushButton* maximizeButton = nullptr;
-  QPushButton* restoreButton = nullptr;
-	QPushButton* minimizeButton = nullptr;
-  QPushButton* closeButton = nullptr;
+  ///
+  ///
+  ///
+  auto restored() -> void;
 
-public:
-  QWidget* buttons_;
-  QWidget* top_drag_area_;
+  ///
+  ///
+  ///
+  auto maximized() -> void;
+
+  ///
+  ///
+  ///
+  auto draggable_widgets() const -> std::vector<QWidget*>;
+
+signals:
+  ///
+  ///
+  ///
+  void minimize();
+  void maximize();
+  void restore();
+  void close();
+
 private:
   ///
   ///
   auto resizeEvent(QResizeEvent *event) -> void override;
+
+private:
+  QPushButton* button_maximize_;
+  QPushButton* button_minimzie_;
+  QPushButton* button_restore_;
+  QPushButton* button_close_;
+  QWidget* buttons_;
+  QWidget* top_drag_area_;
 };
 
-} //namespace detail
 } //namespace frameless
 
 #endif // FRAMELESS_WIDGET_H

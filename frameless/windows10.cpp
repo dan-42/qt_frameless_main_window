@@ -23,18 +23,17 @@ Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
-#include <frameless/detail/widget_impl.hpp>
+#include <frameless/windows10.hpp>
 
 #include <QLabel>
 #include <QLayout>
+#include <QPushButton>
 
 namespace frameless
 {
-namespace detail
-{
 
-widget_impl::widget_impl(QWidget *parent)
-  : QWidget(parent)
+windows10::windows10()
+  : QWidget(nullptr)
 {
   {
     buttons_ = new QWidget{this};
@@ -42,8 +41,7 @@ widget_impl::widget_impl(QWidget *parent)
     Pal.setColor(QPalette::Background, Qt::red);
     buttons_->setAutoFillBackground(true);
     buttons_->setPalette(Pal);
-    buttons_->setFixedSize(200, 30);
-    buttons_->show();
+    buttons_->setFixedSize(200, 30);    
     buttons_->setGeometry(this->width()-buttons_->width(), 0, 200, 30);
   }
   {
@@ -51,15 +49,13 @@ widget_impl::widget_impl(QWidget *parent)
     QPalette Pal(palette());
     Pal.setColor(QPalette::Background, Qt::red);
     top_drag_area_->setAutoFillBackground(true);
-    top_drag_area_->setPalette(Pal);
-    top_drag_area_->show();
+    top_drag_area_->setPalette(Pal);    
     top_drag_area_->setGeometry(0, 0, this->width(), 18);
 
     QWidget* leftSpacer = new QWidget;
     leftSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
     leftSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    leftSpacer->setStyleSheet("background-color: none; border: none;");
-    leftSpacer->show();
+    leftSpacer->setStyleSheet("background-color: none; border: none;");    
 
     auto layout = new QHBoxLayout{};
     layout->setSpacing(0);
@@ -84,35 +80,41 @@ widget_impl::widget_impl(QWidget *parent)
     button->setText(QString::fromUtf8(txt));
     button->setFixedSize(45, 30);
   };
-	//Create the min/max/close buttons
-  minimizeButton = new QPushButton{};
-  maximizeButton = new QPushButton{};
-  restoreButton = new QPushButton{};
-  closeButton = new QPushButton{};
 
-  config_button(minimizeButton, u8"\uE921");
-  config_button(maximizeButton, u8"\uE922");
-  config_button(restoreButton, u8"\uE923");
-  config_button(closeButton, u8"\uE8BB");
+	//Create the min/max/close buttons
+  button_minimzie_ = new QPushButton;
+  button_maximize_ = new QPushButton;
+  button_restore_ = new QPushButton;
+  button_close_ = new QPushButton;
+
+  config_button(button_minimzie_, u8"\uE921");
+  config_button(button_maximize_, u8"\uE922");
+  config_button(button_restore_, u8"\uE923");
+  config_button(button_close_, u8"\uE8BB");
 
   auto buttons_layout = new QHBoxLayout{};
   buttons_layout->setSpacing(0);
   buttons_layout->setMargin(0);
   buttons_layout->addWidget(leftSpacer);
-  buttons_layout->addWidget(minimizeButton);
-  buttons_layout->addWidget(restoreButton);
-  buttons_layout->addWidget(maximizeButton);
-  buttons_layout->addWidget(closeButton);
-  buttons_layout->setAlignment(minimizeButton, Qt::AlignTop);
-  buttons_layout->setAlignment(restoreButton, Qt::AlignTop);
-  buttons_layout->setAlignment(maximizeButton, Qt::AlignTop);
-  buttons_layout->setAlignment(closeButton, Qt::AlignTop);
+  buttons_layout->addWidget(button_minimzie_);
+  buttons_layout->addWidget(button_maximize_);
+  buttons_layout->addWidget(button_restore_);
+  buttons_layout->addWidget(button_close_);
+  buttons_layout->setAlignment(button_minimzie_, Qt::AlignTop);
+  buttons_layout->setAlignment(button_maximize_, Qt::AlignTop);
+  buttons_layout->setAlignment(button_restore_, Qt::AlignTop);
+  buttons_layout->setAlignment(button_close_, Qt::AlignTop);
   buttons_->setLayout(buttons_layout);
+
+  connect(button_minimzie_, &QPushButton::clicked, [this](){ emit minimize(); });
+  connect(button_maximize_, &QPushButton::clicked, [this](){ emit maximize(); });
+  connect(button_restore_, &QPushButton::clicked, [this](){ emit restore(); });
+  connect(button_close_, &QPushButton::clicked, [this](){ emit close(); });
 }
 
 ///
 ///
-auto widget_impl::content(QWidget* c) -> void
+auto windows10::content(QWidget* c) -> void
 {
   if(!layout())
   {
@@ -127,12 +129,34 @@ auto widget_impl::content(QWidget* c) -> void
 
 ///
 ///
-auto widget_impl::resizeEvent(QResizeEvent* event) -> void
+auto windows10::restored() -> void
+{
+  button_maximize_->show();
+  button_restore_->hide();
+}
+
+///
+///
+auto windows10::maximized() -> void
+{
+  button_maximize_->hide();
+  button_restore_->show();
+}
+
+///
+///
+auto windows10::draggable_widgets() const -> std::vector<QWidget*>
+{
+  return std::vector<QWidget*>{buttons_, top_drag_area_};
+}
+
+///
+///
+auto windows10::resizeEvent(QResizeEvent* /*event*/) -> void
 {
   buttons_->move(this->width()-buttons_->width(), 0);
   top_drag_area_->setGeometry(0, 0, width(), 18);
 }
 
 
-} //namespace detail
 } //namespace frameless

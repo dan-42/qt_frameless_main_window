@@ -39,13 +39,16 @@ namespace frameless
 {
 ///
 ///
-frameless_window::frameless_window()
-  : impl_{std::make_unique<detail::widget_type>()}
+frameless_window::frameless_window(QWidget* c)
+  : QObject{}
+  , impl_{std::make_unique<detail::widget_type>(c)}
 {
 #ifdef __APPLE__
   //Then, hide the OS X title bar
   detail::osx::osx_hide_title_bar::hide(impl_->winId());
 #endif
+  connect(impl_.get(), &detail::widget_type::on_restore, [this](){ emit on_restore();});
+  connect(impl_.get(), &detail::widget_type::on_maximize, [this](){ emit on_maximize();});
 }
 
 ///
@@ -61,16 +64,51 @@ auto frameless_window::show() -> void
 
 ///
 ///
-auto frameless_window::geometry(int x, int y, int w, int h) -> void
+auto frameless_window::hide() -> void
 {
-  impl_->setGeometry(x, y, w, h);
+  impl_->hide();
 }
 
 ///
 ///
-auto frameless_window::content(QWidget* c) -> void
+auto frameless_window::minimize() -> void
 {
-  impl_->content(c);
+  impl_->minimize();
+}
+
+///
+///
+auto frameless_window::maximize() -> void
+{
+  impl_->maximize();
+}
+
+///
+///
+auto frameless_window::restore() -> void
+{
+  impl_->restore();
+}
+
+///
+///
+auto frameless_window::close() -> void
+{
+  impl_->close();
+}
+
+///
+///
+auto frameless_window::geometry(const QRect& g) -> void
+{
+  impl_->geometry(g);
+}
+
+///
+///
+auto frameless_window::add_draggable_areas(const std::vector<QWidget*>& areas) -> void
+{
+  impl_->add_draggable_areas(areas);
 }
 
 } //namespace frameless

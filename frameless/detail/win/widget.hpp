@@ -25,14 +25,10 @@ Copyright 2018 github.com/dan-42
 */
 
 #pragma once
-#ifndef FRAMELESS_widget_H
-#define FRAMELESS_widget_H
+#ifndef FRAMELESS_DETAIL_WIN_WIDGET_H
+#define FRAMELESS_DETAIL_WIN_WIDGET_H
 
 #include <QWidget>
-#include <QVBoxLayout>
-
-#include <frameless/detail/widget_impl.hpp>
-#include <frameless/detail/win/native_window.hpp>
 
 namespace frameless
 {
@@ -41,49 +37,91 @@ namespace detail
 namespace win
 {
 
+class native_window;
+
 class widget : public QWidget
 {
     Q_OBJECT
 public:
-    widget();
-    ~widget() override;
+  ///
+  ///
+  ///
+  widget(QWidget* content);
 
-    void show();
-    void center();
-    void setGeometry(int x, int y, int w, int h);
-    auto content(QWidget* c) -> void;
+  ///
+  ///
+  ///
+  ~widget() override;
 
-    HWND getParentWindow() const;
+  ///
+  ///
+  ///
+  auto show() -> void;
 
-public slots:
-    void onMaximizeButtonClicked();
-    void onRestoreButtonClicked();
-    void onMinimizeButtonClicked();
-    void onCloseButtonClicked();
+  ///
+  ///
+  ///
+  auto hide() -> void;
 
-protected:
+  ///
+  ///
+  ///
+  auto minimize() -> void;
+
+  ///
+  ///
+  ///
+  auto maximize() -> void;
+
+  ///
+  ///
+  ///
+  auto restore() -> void;
+
+  ///
+  ///
+  ///
+  auto close() -> void;
+
+  ///
+  ///
+  ///
+  auto center_to_parent() -> void;
+
+  ///
+  ///
+  ///
+  auto geometry(const QRect& rect) -> void;
+
+  ///
+  ///
+  ///
+  auto add_draggable_areas(const std::vector<QWidget*>& areas) -> void;
+signals:
+  ///
+  ///
+  ///
+  void on_restore();
+
+  ///
+  ///
+  ///
+  void on_maximize();
+
+private:    
     void childEvent( QChildEvent *e ) override;
     bool eventFilter( QObject *o, QEvent *e ) override;
-
     bool focusNextPrevChild(bool next) override;
     void focusInEvent(QFocusEvent *e) override;
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;    
 
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
-private:
-    QVBoxLayout m_Layout;
-
-    widget_impl* p_Widget;
-
-    native_window* native_window_;
-
-    HWND _prevFocus;
-    bool _reenableParent;
-
-    int BORDERWIDTH = 6;		//Adjust this as you wish for # of pixels on the edges to show resize handles
-    int TOOLBARHEIGHT = 40; //Adjust this as you wish for # of pixels from the top to allow dragging the window
-
-    void saveFocus();
-    void resetFocus();
+private:  
+  native_window* native_window_;
+  QWidget* content_;
+  std::vector<QWidget*> allowed_window_dragging_areas_;
+  bool reenable_parent_;
+  int border_width_;
+  int border_top_height_;
 };
 
 } //namespace win
@@ -91,4 +129,4 @@ private:
 } //namespace frameless
 
 
-#endif // FRAMELESS_widget_H
+#endif // FRAMELESS_DETAIL_WIN_WIDGET_H

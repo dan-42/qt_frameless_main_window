@@ -25,11 +25,14 @@ Copyright 2018 github.com/dan-42
 
 #ifdef _MSC_VER
 #  pragma comment(lib, "Gdi32.lib")
+#  pragma comment(lib, "user32.lib")
 #endif
 
 #include <frameless/detail/win/native_window.hpp>
 
+#include <Windowsx.h>
 #include <dwmapi.h>
+
 #include <stdexcept>
 
 namespace frameless
@@ -38,15 +41,15 @@ namespace detail
 {
 namespace win
 {
-native_window::native_window(const int x, const int y, const int width, const int height)
-  : hWnd(nullptr)  
+///
+///
+native_window::native_window(const QRect& rect)
+  : native_window_handle_(nullptr)
   , flag_size_chaning_{false}
 {
-  //The native window technically has a background color. You can set it here
-  HBRUSH windowBackground = CreateSolidBrush(RGB(255, 255, 255));
 
   HINSTANCE hInstance = GetModuleHandle(nullptr);
-  WNDCLASSEX wcx = { 0 };
+  WNDCLASSEX wcx{};
 
   wcx.cbSize = sizeof(WNDCLASSEX);
   wcx.style = CS_HREDRAW | CS_VREDRAW;
@@ -54,9 +57,8 @@ native_window::native_window(const int x, const int y, const int width, const in
   wcx.lpfnWndProc = WndProc;
   wcx.cbClsExtra = 0;
   wcx.cbWndExtra = 0;
-  wcx.lpszClassName = L"WindowClass";
-  wcx.hbrBackground = windowBackground;
-  wcx.hCursor = LoadCursor(hInstance, IDC_ARROW);
+  wcx.lpszClassName = L"WindowClass"; 
+  wcx.hCursor = LoadCursor(hInstance, IDC_APPSTARTING);
 
   RegisterClassEx(&wcx);
   if (FAILED(RegisterClassEx(&wcx)))
@@ -65,36 +67,134 @@ native_window::native_window(const int x, const int y, const int width, const in
   }
 
   //Create a native window with the appropriate style
-  hWnd = CreateWindow(L"WindowClass", L"WindowTitle", aero_borderless, x, y, width, height, 0, 0, hInstance, nullptr);
-  if (!hWnd)
+  native_window_handle_ = CreateWindow(L"WindowClass", L"WindowTitle", aero_borderless_, rect.x(), rect.y(), rect.width(), rect.height(), nullptr, nullptr, hInstance, nullptr);
+  if (!native_window_handle_)
   {
     throw std::runtime_error("couldn't create window because of reasons");
   }
 
-  SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+  SetWindowLongPtr(native_window_handle_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   //This code may be required for aero shadows on some versions of Windows
   //const MARGINS aero_shadow_on = { 1, 1, 1, 1 };
-  //DwmExtendFrameIntoClientArea(hWnd, &aero_shadow_on);
-  SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+  //DwmExtendFrameIntoClientArea(native_window_handle_, &aero_shadow_on);
+  SetWindowPos(native_window_handle_, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
 }
 
 ///
 ///
-native_window::~native_window()
-{
-  //Hide the window & send the destroy message
-  ShowWindow(hWnd, SW_HIDE);
-  DestroyWindow(hWnd);
+native_window::~native_window() noexcept
+{  
+  ShowWindow(native_window_handle_, SW_HIDE);
+  DestroyWindow(native_window_handle_);
 }
 
 ///
-//
-LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+///
+auto native_window::minimum_size(const QSize& size) -> void
 {
-  native_window *window = reinterpret_cast<native_window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+  minimum_size_.required = true;
+  minimum_size_.width = size.width();
+  minimum_size_.height = size.height();
+}
+
+///
+///
+auto native_window::maximum_size(const QSize& size) -> void
+{
+  maximum_size_.required = true;
+  maximum_size_.width = size.width();
+  maximum_size_.height = size.height();
+}
+
+///
+///
+auto native_window::geometry(const QRect& g) -> void
+{
+  if(!flag_size_chaning_)
+  {
+    flag_size_chaning_ = true;
+    MoveWindow(native_window_handle_, g.x(), g.y(), g.width(), g.height(), 1);
+    flag_size_chaning_ = false;
+  }
+}
+
+///
+///
+auto native_window::device_pixel_ratio(long r) -> void
+{
+  device_pixel_ratio_ = r;
+}
+
+///
+///
+auto native_window::update() -> void
+{
+  RECT winrect;
+  GetClientRect(native_window_handle_, &winrect);
+
+  WINDOWPLACEMENT wp;
+  wp.length = sizeof(WINDOWPLACEMENT);
+  GetWindowPlacement(native_window_handle_, &wp);
+
+  if (wp.showCmd == SW_MAXIMIZE)
+  {
+    const auto border = 8 * device_pixel_ratio_;
+    emit geometry_changed(QRect{
+        border
+      , border
+      , winrect.right -  (2 * border)
+      , winrect.bottom - (2 * border)                            
+    });
+  }
+  else
+  {
+    emit geometry_changed(QRect{0, 0, winrect.right,  winrect.bottom});
+  }
+}
+
+///
+///
+auto native_window::native_handle() const -> HWND
+{
+  return native_window_handle_;
+}
+
+///
+///
+void native_window::saveFocus()
+{
+  if (!prev_focus_)
+  {
+    prev_focus_ = ::GetFocus();
+  }
+  if (!prev_focus_)
+  {
+    prev_focus_ = native_window_handle_;
+  }
+}
+
+///
+///
+void native_window::resetFocus()
+{
+  if (prev_focus_)
+  {
+    ::SetFocus(prev_focus_);
+  }
+  else
+  {
+    ::SetFocus(native_window_handle_);
+  }
+}
+
+///
+///
+LRESULT CALLBACK native_window::WndProc(HWND native_window_handle_, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  native_window *window = reinterpret_cast<native_window*>(GetWindowLongPtr(native_window_handle_, GWLP_USERDATA));
   if (!window)
   {
-    return DefWindowProc(hWnd, message, wParam, lParam);
+    return DefWindowProc(native_window_handle_, message, wParam, lParam);
   }
 
   switch (message)
@@ -105,13 +205,13 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
       if (wParam == SC_KEYMENU)
       {
         RECT winrect;
-        GetWindowRect(hWnd, &winrect);
-        TrackPopupMenu(GetSystemMenu(hWnd, false), TPM_TOPALIGN | TPM_LEFTALIGN, winrect.left + 5, winrect.top + 5, 0, hWnd, NULL);
+        GetWindowRect(native_window_handle_, &winrect);
+        TrackPopupMenu(GetSystemMenu(native_window_handle_, false), TPM_TOPALIGN | TPM_LEFTALIGN, winrect.left + 5, winrect.top + 5, 0, native_window_handle_, nullptr);
         break;
       }
       else
       {
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return DefWindowProc(native_window_handle_, message, wParam, lParam);
       }
     }
     case WM_NCCALCSIZE:
@@ -120,8 +220,8 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
       //WS_THICKFRAME and WS_CAPTION
       return 0;
     }
-
-      //If the parent window gets any close messages, send them over to QWinWidget and don't actually close here
+    // If the parent window gets any close messages,
+    // send them over to QWinWidget and don't actually close here
     case WM_CLOSE:
     {
       if (window)
@@ -139,49 +239,50 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
 
     case WM_NCHITTEST:
     {
-
-      const LONG borderWidth = 8 * window->device_pixel_ratio_; //This value can be arbitrarily large as only intentionally-HTTRANSPARENT'd messages arrive here
+      // This value can be arbitrarily large
+      // as only intentionally-HTTRANSPARENT'd messages arrive here
+      const LONG border_width = 8 * window->device_pixel_ratio_;
       RECT winrect;
-      GetWindowRect(hWnd, &winrect);
-      long x = GET_X_LPARAM(lParam);
-      long y = GET_Y_LPARAM(lParam);
+      GetWindowRect(native_window_handle_, &winrect);
+      const auto x = GET_X_LPARAM(lParam);
+      const auto y = GET_Y_LPARAM(lParam);
 
       //bottom left corner
-      if (x >= winrect.left && x < winrect.left + borderWidth &&
-          y < winrect.bottom && y >= winrect.bottom - borderWidth)
+      if (x >= winrect.left && x < winrect.left + border_width &&
+          y < winrect.bottom && y >= winrect.bottom - border_width)
       {
         return HTBOTTOMLEFT;
       }
       //bottom right corner
-      if (x < winrect.right && x >= winrect.right - borderWidth &&
-          y < winrect.bottom && y >= winrect.bottom - borderWidth)
+      if (x < winrect.right && x >= winrect.right - border_width &&
+          y < winrect.bottom && y >= winrect.bottom - border_width)
       {
         return HTBOTTOMRIGHT;
       }
       //top left corner
-      if (x >= winrect.left && x < winrect.left + borderWidth &&
-          y >= winrect.top && y < winrect.top + borderWidth)
+      if (x >= winrect.left && x < winrect.left + border_width &&
+          y >= winrect.top && y < winrect.top + border_width)
       {
         return HTTOPLEFT;
       }
       //top right corner
-      if (x < winrect.right && x >= winrect.right - borderWidth &&
-          y >= winrect.top && y < winrect.top + borderWidth)
+      if (x < winrect.right && x >= winrect.right - border_width &&
+          y >= winrect.top && y < winrect.top + border_width)
       {
         return HTTOPRIGHT;
       }
       //left border
-      if (x >= winrect.left && x < winrect.left + borderWidth)
+      if (x >= winrect.left && x < winrect.left + border_width)
       {
         return HTLEFT;
       }
       //right border
-      if (x < winrect.right && x >= winrect.right - borderWidth)
+      if (x < winrect.right && x >= winrect.right - border_width)
       {
         return HTRIGHT;
       }
       //bottom border
-      if (y < winrect.bottom && y >= winrect.bottom - borderWidth)
+      if (y < winrect.bottom && y >= winrect.bottom - border_width)
       {
         return HTBOTTOM;
       }
@@ -190,14 +291,15 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
       {
         return HTTOP;
       }
-
-      //If it wasn't a border but we still got the message, return HTCAPTION to allow click-dragging the window
+      // If it wasn't a border but we still got the message,
+      // return HTCAPTION to allow click-dragging the window
       return HTCAPTION;
 
       break;
     }
 
-      //When this native window changes size, it needs to manually resize the QWinWidget child
+    // When this native window changes size,
+    // it needs to manually resize the QWinWidget child
     case WM_SIZE:
     {
       if(window)
@@ -208,102 +310,20 @@ LRESULT CALLBACK native_window::WndProc(HWND hWnd, UINT message, WPARAM wParam, 
     }
     case WM_GETMINMAXINFO:
     {
-      MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
-      if (window->minimumSize.required) {
-        minMaxInfo->ptMinTrackSize.x = window->getMinimumWidth();;
-        minMaxInfo->ptMinTrackSize.y = window->getMinimumHeight();
+      auto minMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
+      if (window->minimum_size_.required) {
+        minMaxInfo->ptMinTrackSize.x = window->minimum_size_.width;
+        minMaxInfo->ptMinTrackSize.y = window->minimum_size_.height;
       }
 
-      if (window->maximumSize.required) {
-        minMaxInfo->ptMaxTrackSize.x = window->getMaximumWidth();
-        minMaxInfo->ptMaxTrackSize.y = window->getMaximumHeight();
+      if (window->maximum_size_.required) {
+        minMaxInfo->ptMaxTrackSize.x = window->maximum_size_.width;
+        minMaxInfo->ptMaxTrackSize.y = window->maximum_size_.height;
       }
       return 0;
     }
-
   }
-
-  return DefWindowProc(hWnd, message, wParam, lParam);
-}
-
-void native_window::setGeometry(const int x, const int y, const int width, const int height)
-{
-  if(!flag_size_chaning_)
-  {
-    flag_size_chaning_ = true;
-    MoveWindow(hWnd, x, y, width, height, 1);
-    flag_size_chaning_ = false;
-  }
-}
-
-auto native_window::device_pixel_ratio(long r) -> void
-{
-  device_pixel_ratio_ = r;
-}
-
-auto native_window::update() -> void
-{
-  RECT winrect;
-  GetClientRect(hWnd, &winrect);
-
-  WINDOWPLACEMENT wp;
-  wp.length = sizeof(WINDOWPLACEMENT);
-  GetWindowPlacement(hWnd, &wp);
-
-  if (wp.showCmd == SW_MAXIMIZE)
-  {
-    const auto border = 8 * device_pixel_ratio_;
-    emit geometry_changed(
-        border
-      , border
-      , winrect.right -  (2 * border)
-      , winrect.bottom - (2 * border)
-    );
-  }
-  else
-  {
-    emit geometry_changed(0, 0, winrect.right,  winrect.bottom);
-  }
-}
-
-auto native_window::native_handle() const -> HWND
-{
-  return hWnd;
-}
-
-void native_window::setMinimumSize(const int width, const int height)
-{
-    this->minimumSize.required = true;
-    this->minimumSize.width = width;
-    this->minimumSize.height = height;
-}
-
-int native_window::getMinimumWidth()
-{
-    return minimumSize.width;
-}
-
-int native_window::getMinimumHeight()
-{
-    return minimumSize.height;
-}
-
-
-void native_window::setMaximumSize(const int width, const int height)
-{
-    this->maximumSize.required = true;
-    this->maximumSize.width = width;
-    this->maximumSize.height = height;
-}
-
-int native_window::getMaximumWidth()
-{
-    return maximumSize.width;
-}
-
-int native_window::getMaximumHeight()
-{
-    return maximumSize.height;
+  return DefWindowProc(native_window_handle_, message, wParam, lParam);
 }
 
 } //namespace win
