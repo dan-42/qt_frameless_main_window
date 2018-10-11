@@ -20,7 +20,9 @@ int main(int argc, char *argv[])
 
   auto content = new QWidget{};  
   QPalette Pal;
-  Pal.setColor(QPalette::Background, Qt::green);
+  //QColor bg_color{55, 55, 55};
+  QColor bg_color{255, 255, 255};
+  Pal.setColor(QPalette::Background, bg_color);
   content->setAutoFillBackground(true);
   content->setPalette(Pal);
 

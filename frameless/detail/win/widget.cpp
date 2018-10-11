@@ -257,6 +257,20 @@ bool widget::nativeEvent(const QByteArray &, void *message, long *result)
   //Pass NCHITTESTS on the window edges as determined by border_width_ & border_top_height_ through to the parent native window
   if (msg->message == WM_NCHITTEST)
   {
+    //If the mouse is over top of the toolbar area BUT is actually positioned over a child widget of the toolbar,
+    //Then we don't want to enable dragging. This allows for buttons in the toolbar, eg, a Maximize button, to keep the mouse interaction
+    const auto widget_at_cursor = QApplication::widgetAt(QCursor::pos());
+    for(auto w : allowed_window_dragging_areas_)
+    {
+      if(w && w == widget_at_cursor)
+      {
+        //The mouse is over a widget, wich area shall allow dragging so pass this message
+        //through to the native window for HTCAPTION dragging
+        *result = HTTRANSPARENT;
+        return true;
+      }
+    }
+
     RECT window_rect;
     int x, y;
 
@@ -264,24 +278,7 @@ bool widget::nativeEvent(const QByteArray &, void *message, long *result)
     x = GET_X_LPARAM(msg->lParam) - window_rect.left;
     y = GET_Y_LPARAM(msg->lParam) - window_rect.top;
 
-    if (x >= border_width_ && x <= window_rect.right - window_rect.left - border_width_ && y >= border_width_ && y <= border_top_height_)
-    {
-      //If the mouse is over top of the toolbar area BUT is actually positioned over a child widget of the toolbar,
-      //Then we don't want to enable dragging. This allows for buttons in the toolbar, eg, a Maximize button, to keep the mouse interaction
-      const auto widget_at_cursor = QApplication::widgetAt(QCursor::pos());
-      for(auto w : allowed_window_dragging_areas_)
-      {
-        if(w && w == widget_at_cursor)
-        {
-          //The mouse is over a widget, wich area shall allow dragging so pass this message
-          //through to the native window for HTCAPTION dragging
-          *result = HTTRANSPARENT;
-          return true;
-        }
-      }
-      return false;
-    }
-    else if (x < border_width_ && y < border_width_)
+    if (x < border_width_ && y < border_width_)
     {
       *result = HTTRANSPARENT;
       return true;
