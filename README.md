@@ -18,5 +18,5 @@ or ![example window explorer](./doc/images/example_ms_explorer.png?raw=true)
 
 # LICENSE
 SPDX-License-Identifier:  MIT
-Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 
+Licensed under the MIT License <http://opensource.org/licenses/MIT>.
