@@ -14,8 +14,13 @@ or ![example window explorer](./doc/images/example_ms_explorer.png?raw=true)
 ## Windows10
  * full normale window behaviour(drag, move, resize, snap, aero)
  * no 1px boarder around window
- 
 
+## Linux
+ * NOT TESTED YET 
+
+## Apple OSX
+ * NOT TESTED YET
+ 
 # LICENSE
 SPDX-License-Identifier:  MIT
 
