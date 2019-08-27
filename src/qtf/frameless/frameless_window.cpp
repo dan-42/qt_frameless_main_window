@@ -24,17 +24,19 @@ Copyright 2018 github.com/dan-42
 
 #ifdef _WIN32
 #  include <Windows.h>
-#  include <frameless/detail/win/widget.hpp>
+#  include <qtf/frameless/detail/win/widget.hpp>
 #else
-#  include <frameless/detail/widget.hpp>
+#  include <qtf/frameless/detail/widget.hpp>
 #endif
 
 #ifdef __APPLE__
-#  include <frameless/detail/osx/osx_hide_title_bar.hpp>
+#  include <qtf/frameless/detail/osx/osx_hide_title_bar.hpp>
 #endif
 
 #include "frameless_window.hpp"
 
+namespace qtf
+{
 namespace frameless
 {
 ///
@@ -99,6 +101,13 @@ auto frameless_window::close() -> void
 
 ///
 ///
+auto frameless_window::content(QWidget* c) -> void
+{
+  impl_->content(c);
+}
+
+///
+///
 auto frameless_window::geometry(const QRect& g) -> void
 {
   impl_->geometry(g);
@@ -112,3 +121,4 @@ auto frameless_window::add_draggable_areas(const std::vector<QWidget*>& areas) -
 }
 
 } //namespace frameless
+} //namespace qtf

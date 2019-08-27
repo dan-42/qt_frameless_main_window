@@ -23,29 +23,28 @@ Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
-#include <frameless/detail/osx/osx_hide_title_bar.hpp>
-#include <Cocoa/Cocoa.h>
+#pragma once
+#ifndef FRAMLESS_DETAIL_OSX_HIDER
+#define FRAMLESS_DETAIL_OSX_HIDER
 
+namespace qtf
+{
 namespace frameless
 {
 namespace detail
 {
 namespace osx
 {
-///
-///
-void osx_hide_title_bar::hide(long winid)
+
+class osx_hide_title_bar
 {
-    NSView *nativeView = reinterpret_cast<NSView *>(winid);
-    NSWindow* nativeWindow = [nativeView window];
-
-    [nativeWindow setStyleMask:
-        [nativeWindow styleMask] | NSFullSizeContentViewWindowMask | NSWindowTitleHidden];
-
-    [nativeWindow setTitlebarAppearsTransparent:YES];
-    //[nativeWindow setMovableByWindowBackground:YES];
-}
+public:
+  static void hide(long winid);
+};
 
 } //namespace osx
 } //namespace detail
 } //namespace frameless
+} //namespace qtf
+
+#endif //FRAMLESS_DETAIL_OSX_HIDER

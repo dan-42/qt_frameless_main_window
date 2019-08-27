@@ -23,25 +23,74 @@ Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
-#ifndef USER_CONTENT_HPP
-#define USER_CONTENT_HPP
+#pragma once
+#ifndef FRAMELESS_WIDGET_H
+#define FRAMELESS_WIDGET_H
 
 #include <QWidget>
 
-namespace Ui {
-class user_content;
-}
 
-class user_content : public QWidget
+class QResizeEvent;
+class QPushButton;
+
+namespace qtf
+{
+namespace frameless
+{
+
+class windows10 : public QWidget
 {
   Q_OBJECT
-
 public:
-  explicit user_content(QWidget *parent = nullptr);
-  ~user_content();
+  ///
+  ///
+  ///
+  explicit windows10();
+	
+  ///
+  ///
+  ///
+  auto content(QWidget* c) -> void;
+
+  ///
+  ///
+  ///
+  auto restored() -> void;
+
+  ///
+  ///
+  ///
+  auto maximized() -> void;
+
+  ///
+  ///
+  ///
+  auto draggable_widgets() const -> std::vector<QWidget*>;
+
+signals:
+  ///
+  ///
+  ///
+  void minimize();
+  void maximize();
+  void restore();
+  void close();
 
 private:
-  Ui::user_content *ui;
+  ///
+  ///
+  auto resizeEvent(QResizeEvent *event) -> void override;
+
+private:
+  QPushButton* button_maximize_;
+  QPushButton* button_minimzie_;
+  QPushButton* button_restore_;
+  QPushButton* button_close_;
+  QWidget* buttons_;
+  QWidget* top_drag_area_;
 };
 
-#endif // USER_CONTENT_HPP
+} //namespace frameless
+} //namespace qtf
+
+#endif // FRAMELESS_WIDGET_H

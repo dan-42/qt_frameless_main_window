@@ -25,9 +25,9 @@ Copyright 2018 github.com/dan-42
 */
 
 
-#include <frameless/detail/win/widget.hpp>
+#include <qtf/frameless/detail/win/widget.hpp>
 
-#include <frameless/detail/win/native_window.hpp>
+#include <qtf/frameless/detail/win/native_window.hpp>
 
 #include <QApplication>
 #include <QEvent>
@@ -38,6 +38,8 @@ Copyright 2018 github.com/dan-42
 #include <Windowsx.h>
 #include <Windows.h>
 
+namespace qtf
+{
 namespace frameless
 {
 namespace detail
@@ -45,10 +47,9 @@ namespace detail
 namespace win
 {
 
-widget::widget(QWidget* content)
+widget::widget(QWidget* _content)
   : QWidget{nullptr}
-  , native_window_{nullptr}
-  , content_{content}
+  , native_window_{nullptr}  
   , allowed_window_dragging_areas_{}
   , reenable_parent_{false}
   , border_width_{6}
@@ -82,20 +83,13 @@ widget::widget(QWidget* content)
   }
 
   //Clear margins & spacing & add the layout to prepare for the content widget
-  content_->setParent(this, Qt::Widget);
-  content_->setVisible(true);
-
-  auto layout = new QHBoxLayout{};
+  auto _layout = new QHBoxLayout{};
   setContentsMargins(0, 0, 0, 0);
-  layout->setContentsMargins(0, 0, 0, 0);
-  layout->setSpacing(0);
-  layout->addWidget(content_);
-  setLayout(layout);
+  _layout->setContentsMargins(0, 0, 0, 0);
+  _layout->setSpacing(0);
+  setLayout(_layout);
 
-  //Send the parent native window a WM_SIZE message to update the widget size
-  native_window_->update();
-
-  allowed_window_dragging_areas_.push_back(content_);
+  content(_content);
 }
 
 ///
@@ -146,6 +140,7 @@ auto widget::restore() -> void
 auto widget::close() -> void
 {
   hide();
+  QWidget::close();
 }
 
 ///
@@ -164,6 +159,22 @@ auto widget::center_to_parent() -> void
     , 0
     , 0
   );
+}
+
+///
+///
+auto widget::content(QWidget* c) -> void
+{
+  if(layout()->count() > 0)
+  {
+    layout()->removeItem(layout()->itemAt(0));
+  }
+  c->setParent(this, Qt::Widget);
+  c->setVisible(true);
+  layout()->addWidget(c);
+  //Send the parent native window a WM_SIZE message to update the widget size
+  native_window_->update();
+  allowed_window_dragging_areas_.push_back(c);
 }
 
 ///
@@ -465,3 +476,4 @@ bool widget::focusNextPrevChild(bool next)
 } //namespace win
 } //namespace detail
 } //namespace frameless
+} //namespace qtf

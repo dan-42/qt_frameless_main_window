@@ -23,17 +23,32 @@ Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
-#include "user_content.hpp"
-#include "ui_user_content.h"
+#include <qtf/frameless/detail/osx/osx_hide_title_bar.hpp>
+#include <Cocoa/Cocoa.h>
 
-user_content::user_content(QWidget *parent) :
-  QWidget(parent),
-  ui(new Ui::user_content)
+namespace qtf
 {
-  ui->setupUi(this);
+namespace frameless
+{
+namespace detail
+{
+namespace osx
+{
+///
+///
+void osx_hide_title_bar::hide(long winid)
+{
+    NSView *nativeView = reinterpret_cast<NSView *>(winid);
+    NSWindow* nativeWindow = [nativeView window];
+
+    [nativeWindow setStyleMask:
+        [nativeWindow styleMask] | NSFullSizeContentViewWindowMask | NSWindowTitleHidden];
+
+    [nativeWindow setTitlebarAppearsTransparent:YES];
+    //[nativeWindow setMovableByWindowBackground:YES];
 }
 
-user_content::~user_content()
-{
-  delete ui;
-}
+} //namespace osx
+} //namespace detail
+} //namespace frameless
+} //namespace qtf

@@ -28,13 +28,15 @@ Copyright 2018 github.com/dan-42
 #  pragma comment(lib, "user32.lib")
 #endif
 
-#include <frameless/detail/win/native_window.hpp>
+#include <qtf/frameless/detail/win/native_window.hpp>
 
 #include <Windowsx.h>
 #include <dwmapi.h>
 
 #include <stdexcept>
 
+namespace qtf
+{
 namespace frameless
 {
 namespace detail
@@ -329,3 +331,4 @@ LRESULT CALLBACK native_window::WndProc(HWND native_window_handle_, UINT message
 } //namespace win
 } //namespace detail
 } //namespace frameless
+} //namespace qtf

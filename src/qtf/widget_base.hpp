@@ -24,24 +24,40 @@ Copyright 2018 github.com/dan-42
 */
 
 #pragma once
-#ifndef FRAMLESS_DETAIL_OSX_HIDER
-#define FRAMLESS_DETAIL_OSX_HIDER
+#ifndef QTF_WIDGET_H
+#define QTF_WIDGET_H
 
-namespace frameless
-{
-namespace detail
-{
-namespace osx
+#include <atomic>
+
+#include <QWidget>
+
+namespace qtf { namespace frameless {
+  class frameless_window;
+  class windows10;
+}}
+
+namespace qtf
 {
 
-class osx_hide_title_bar
+class widget_base : public QWidget
 {
 public:
-  static void hide(long winid);
+  widget_base(QWidget* parent = nullptr);
+  ~widget_base() override;
+
+  auto setParent(QWidget* parent) -> void;
+  auto setParent(QWidget* parent, Qt::WindowFlags f) -> void;
+
+private:
+  auto set_parent_impl(QWidget* parent) -> void;
+
+  auto closeEvent(QCloseEvent *event) -> void override;
+  auto event(QEvent *event) -> bool override;
+
+private:
+  frameless::frameless_window* window_;
+  frameless::windows10* decoration_;
 };
 
-} //namespace osx
-} //namespace detail
-} //namespace frameless
-
-#endif //FRAMLESS_DETAIL_OSX_HIDER
+} // namespace qtf
+#endif // WIDGET_HPP

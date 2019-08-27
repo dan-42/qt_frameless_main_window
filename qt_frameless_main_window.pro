@@ -27,25 +27,28 @@ TARGET = frameless_window
 TEMPLATE = app
 
 SOURCES += \
-  $$files(*.cpp) \
-  $$files(frameless/*.cpp) \
-  $$files(frameless/detail/*.cpp)
+  $$files(src/*.cpp) \
+  $$files(src/qtf/*.cpp) \
+  $$files(src/qtf/frameless/*.cpp) \
+  $$files(src/qtf/frameless/detail/*.cpp)
 
 HEADERS += \
-  $$files(*.hpp) \
-  $$files(frameless/*.hpp) \
-  $$files(frameless/detail/*.hpp)
+  $$files(src/*.hpp) \
+  $$files(src/qtf/*.hpp) \
+  $$files(src/qtf/frameless/*.hpp) \
+  $$files(src/qtf/frameless/detail/*.hpp)
 
+INCLUDEPATH += src
 win32 {
   # Only include / compile these files on Windows
-  SOURCES += $$files(frameless/detail/win/*.cpp)
-  HEADERS += $$files(frameless/detail/win/*.hpp)
+  SOURCES += $$files(src/qtf/frameless/detail/win/*.cpp)
+  HEADERS += $$files(src/qtf/frameless/detail/win/*.hpp)
 }
 
 mac {
   # Only include / compile these files on OS X
-  OBJECTIVE_SOURCES += $$files(frameless/detail/osx/*.mm)
-  HEADERS  += $$files(frameless/detail/osx/*.hpp)
+  OBJECTIVE_SOURCES += $$files(src/qtf/frameless/detail/osx/*.mm)
+  HEADERS  += $$files(src/qtf/frameless/detail/osx/*.hpp)
 
   # Additionally include Cocoa for OS X code
   LIBS += -framework Foundation -framework Cocoa
@@ -53,4 +56,4 @@ mac {
 }
 
 FORMS += \
-  $$files(*.ui)
+  $$files(src/qtf/*.ui)

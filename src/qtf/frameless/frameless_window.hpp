@@ -29,20 +29,23 @@ Copyright 2018 github.com/dan-42
 #include <memory>
 
 #ifdef _WIN32
-namespace frameless { namespace detail { namespace win {
+namespace qtf { namespace frameless { namespace detail { namespace win {
   class widget;
-}}}
-namespace frameless { namespace detail {
+}}}}
+namespace qtf { namespace frameless { namespace detail {
   using widget_type = win::widget;
-}}
+}}}
 #else
-namespace frameless { namespace detail {
+namespace qtf { namespace frameless { namespace detail {
   class widget_impl;
   using widget_type = widget_impl;
-}}
+}}}
 #endif
 
 class QWidget;
+
+namespace qtf
+{
 namespace frameless
 {
 
@@ -53,7 +56,7 @@ public:
   ///
   /// \brief frameless_window
   ///
-  frameless_window(QWidget* content);
+  frameless_window(QWidget* content = nullptr);
 
   ///
   ///
@@ -93,6 +96,11 @@ public:
   ///
   ///
   ///
+  auto content(QWidget* c) -> void;
+
+  ///
+  ///
+  ///
   auto geometry(const QRect& g) -> void;
 
   ///
@@ -117,4 +125,5 @@ private:
 };
 
 } //namespace frameless
+} //namespace qtf
 #endif // FRAMELESS_WINDOW_HPP

@@ -19,17 +19,22 @@ LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Copyright 2013 Digia Plc and/or its subsidiary(-ies). BSD
 Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
 #pragma once
-#ifndef FRAMELESS_DETAIL_WIN_WIDGET_H
-#define FRAMELESS_DETAIL_WIN_WIDGET_H
+#ifndef FRAMELESS_native_window_H
+#define FRAMELESS_native_window_H
 
+#include <Windows.h>
+
+#include <QObject>
+#include <QSize>
 #include <QWidget>
 
+namespace qtf
+{
 namespace frameless
 {
 namespace detail
@@ -37,67 +42,71 @@ namespace detail
 namespace win
 {
 
-class native_window;
-
-class widget : public QWidget
+class native_window : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
   ///
   ///
   ///
-  widget(QWidget* content);
+  native_window(const QRect& rect);
 
   ///
   ///
   ///
-  ~widget() override;
+  ~native_window() noexcept;
 
   ///
   ///
   ///
-  auto show() -> void;
+  auto minimum_size(const QSize& size) -> void;
 
   ///
   ///
   ///
-  auto hide() -> void;
+  auto maximum_size(const QSize& size) -> void;
 
   ///
   ///
   ///
-  auto minimize() -> void;
+  auto geometry(const QRect& g) -> void;
 
   ///
   ///
   ///
-  auto maximize() -> void;
+  auto device_pixel_ratio(long r) -> void;
 
   ///
   ///
   ///
-  auto restore() -> void;
+  auto native_handle() const -> HWND;
 
   ///
   ///
   ///
-  auto close() -> void;
+  auto update() -> void;
 
   ///
   ///
   ///
-  auto center_to_parent() -> void;
+  auto saveFocus() -> void;
 
   ///
   ///
   ///
-  auto geometry(const QRect& rect) -> void;
+  auto resetFocus() -> void;
 
-  ///
-  ///
-  ///
-  auto add_draggable_areas(const std::vector<QWidget*>& areas) -> void;
 signals:
+  ///
+  ///
+  ///
+  void close_event();
+
+  ///
+  ///
+  ///
+  void geometry_changed(const QRect& rect);
+
   ///
   ///
   ///
@@ -108,25 +117,35 @@ signals:
   ///
   void on_maximize();
 
-private:    
-    void childEvent( QChildEvent *e ) override;
-    bool eventFilter( QObject *o, QEvent *e ) override;
-    bool focusNextPrevChild(bool next) override;
-    void focusInEvent(QFocusEvent *e) override;
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;    
+private:
+  ///
+  ///
+  ///
+  static LRESULT CALLBACK WndProc(HWND native_window_handle_, UINT message, WPARAM wParam, LPARAM lParam);
 
-private:  
-  native_window* native_window_;
-  QWidget* content_;
-  std::vector<QWidget*> allowed_window_dragging_areas_;
-  bool reenable_parent_;
-  int border_width_;
-  int border_top_height_;
+private:
+  struct sizeType
+  {
+      inline sizeType()
+        : required(false), width(0), height(0)
+      {
+      }
+      bool required;
+      int width;
+      int height;
+  };
+
+  HWND native_window_handle_;
+  HWND prev_focus_;
+  DWORD aero_borderless_ = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
+  bool flag_size_chaning_;
+  long device_pixel_ratio_;
+  sizeType minimum_size_;
+  sizeType maximum_size_;
 };
-
 } //namespace win
 } //namespace detail
 } //namespace frameless
+} //namespace qtf
 
-
-#endif // FRAMELESS_DETAIL_WIN_WIDGET_H
+#endif // FRAMELESS_native_window_H

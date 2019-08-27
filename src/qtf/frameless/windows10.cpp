@@ -23,12 +23,14 @@ Copyright 2017 github.com/dfct
 Copyright 2018 github.com/dan-42
 */
 
-#include <frameless/windows10.hpp>
+#include <qtf/frameless/windows10.hpp>
 
 #include <QLabel>
 #include <QLayout>
 #include <QPushButton>
 
+namespace qtf
+{
 namespace frameless
 {
 
@@ -176,3 +178,4 @@ auto windows10::resizeEvent(QResizeEvent* /*event*/) -> void
 
 
 } //namespace frameless
+} //namespace qtf
