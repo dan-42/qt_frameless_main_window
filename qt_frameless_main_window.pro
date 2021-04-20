@@ -19,7 +19,7 @@
 # SOFTWARE.
 #
 # Copyright 2017 github.com/dfct
-# Copyright 2018 github.com/dan-42
+# Copyright 2021 github.com/dan-42
 
 QT += core gui widgets
 

@@ -19,32 +19,18 @@ LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Copyright 2017 github.com/dfct
-Copyright 2018 github.com/dan-42
+Copyright 2021 github.com/dan-42
 */
 
-#pragma once
-#ifndef FRAMLESS_DETAIL_OSX_HIDER
-#define FRAMLESS_DETAIL_OSX_HIDER
+#ifndef QTF_WIDGET_HPP
+#define QTF_WIDGET_HPP
 
-namespace qtf
-{
-namespace frameless
-{
-namespace detail
-{
-namespace osx
-{
+#include <qtf/config.hpp>
 
-class osx_hide_title_bar
-{
-public:
-  static void hide(long winid);
-};
+#if (defined QTF_CONFIG_WINDOWS)
+# include <qtf/detail/win/widget.hpp>
+#else
+# error "QTF: Error sorry there is no tested support for other platforms"
+#endif
 
-} //namespace osx
-} //namespace detail
-} //namespace frameless
-} //namespace qtf
-
-#endif //FRAMLESS_DETAIL_OSX_HIDER
+#endif // QTF_WIDGET_HPP

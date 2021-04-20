@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>style/style.qss</file>
-        <file>quick/plot.qml</file>
-        <file>quick/plotly-latest.min.js</file>
-        <file>quick/Chart.bundle.min.js</file>
-    </qresource>
-</RCC>

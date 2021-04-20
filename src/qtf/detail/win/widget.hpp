@@ -19,111 +19,71 @@ LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Copyright 2018 github.com/dan-42
+Copyright 2017 github.com/dfct
+Copyright 2021 github.com/dan-42
 */
 
-#ifndef FRAMELESS_WINDOW_HPP
-#define FRAMELESS_WINDOW_HPP
+#pragma once
+#ifndef QTF_DETAIL_WIN_WIDGET_H
+#define QTF_DETAIL_WIN_WIDGET_H
 
-#include <QObject>
-#include <memory>
+#include <qtf/config.hpp>
+#if (defined QTF_CONFIG_WINDOWS)
 
-#ifdef _WIN32
-namespace qtf { namespace frameless { namespace detail { namespace win {
-  class widget;
-}}}}
-namespace qtf { namespace frameless { namespace detail {
-  using widget_type = win::widget;
-}}}
-#else
-namespace qtf { namespace frameless { namespace detail {
-  class widget_impl;
-  using widget_type = widget_impl;
-}}}
-#endif
+#include <QWidget>
 
-class QWidget;
+namespace qtf { namespace decoration {
+  class windows10;
+}}
 
 namespace qtf
 {
-namespace frameless
-{
 
-class frameless_window : public QObject
+class widget : public QWidget
 {
-  Q_OBJECT
+// Constructors
 public:
   ///
-  /// \brief frameless_window
+  /// \see QWidget
   ///
-  frameless_window(QWidget* content = nullptr);
+  widget(QWidget* parent = nullptr);
 
   ///
+  /// \see ~QWidget
   ///
+  ~widget() override;
+  
+// Setter
+public:
   ///
-  ~frameless_window() noexcept;
+  /// Sets the Window decoration, e.g. a windows 10 style
+  ///
+  auto setDecoration(decoration::windows10* decoration) -> void;
 
-  ///
-  ///
-  ///
-  auto show() -> void;
-
-  ///
-  ///
-  ///
-  auto hide() -> void;
-
-  ///
-  ///
-  ///
-  auto minimize() -> void;
-
-  ///
-  ///
-  ///
-  auto maximize() -> void;
-
-  ///
-  ///
-  ///
-  auto restore() -> void;
-
-  ///
-  ///
-  ///
-  auto close() -> void;
-
-  ///
-  ///
-  ///
-  auto content(QWidget* c) -> void;
-
-  ///
-  ///
-  ///
-  auto geometry(const QRect& g) -> void;
-
-  ///
-  ///
-  ///
-  auto add_draggable_areas(const std::vector<QWidget*>& areas) -> void;
-
-signals:
-  ///
-  ///
-  ///
-  void on_restore();
-
-  ///
-  ///
-  ///
-  void on_maximize();
-
-
+// Implementation
 private:
-  std::unique_ptr<detail::widget_type> impl_;
+  auto minimize() -> void;
+  auto maximize() -> void;
+  auto restore() -> void;
+  auto close() -> void;  
+  auto decoration_set_restored() -> void;  
+  auto decoration_set_maximized() -> void;
+  auto decoration_raise() -> void;
+  auto decoration_cleanup() -> void;
+  auto native_window_handle() -> HWND;
+
+// Overrides
+private:
+  auto nativeEvent(const QByteArray &eventType, void *message, long *result) -> bool override;    
+
+// variables
+private:
+  decoration::windows10* decoration_;
+  std::vector<QWidget*> drag_areas_;
 };
 
-} //namespace frameless
-} //namespace qtf
-#endif // FRAMELESS_WINDOW_HPP
+} // namespace qtf
+
+#endif //(defined QTF_CONFIG_WINDOWS)
+
+#endif // QTF_DETAIL_WIN_WIDGET_H

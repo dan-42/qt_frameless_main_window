@@ -20,77 +20,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Copyright 2017 github.com/dfct
-Copyright 2018 github.com/dan-42
+Copyright 2021 github.com/dan-42
 */
 
-#pragma once
-#ifndef FRAMELESS_WIDGET_H
-#define FRAMELESS_WIDGET_H
-
-#include <QWidget>
-
-
-class QResizeEvent;
-class QPushButton;
+#include <qtf/frameless/detail/osx/osx_hide_title_bar.hpp>
+#include <Cocoa/Cocoa.h>
 
 namespace qtf
 {
 namespace frameless
 {
-
-class windows10 : public QWidget
+namespace detail
 {
-  Q_OBJECT
-public:
-  ///
-  ///
-  ///
-  explicit windows10();
-	
-  ///
-  ///
-  ///
-  auto content(QWidget* c) -> void;
+namespace osx
+{
+///
+///
+void osx_hide_title_bar::hide(long winid)
+{
+    NSView *nativeView = reinterpret_cast<NSView *>(winid);
+    NSWindow* nativeWindow = [nativeView window];
 
-  ///
-  ///
-  ///
-  auto restored() -> void;
+    [nativeWindow setStyleMask:
+        [nativeWindow styleMask] | NSFullSizeContentViewWindowMask | NSWindowTitleHidden];
 
-  ///
-  ///
-  ///
-  auto maximized() -> void;
+    [nativeWindow setTitlebarAppearsTransparent:YES];
+    //[nativeWindow setMovableByWindowBackground:YES];
+}
 
-  ///
-  ///
-  ///
-  auto draggable_widgets() const -> std::vector<QWidget*>;
-
-signals:
-  ///
-  ///
-  ///
-  void minimize();
-  void maximize();
-  void restore();
-  void close();
-
-private:
-  ///
-  ///
-  auto resizeEvent(QResizeEvent *event) -> void override;
-
-private:
-  QPushButton* button_maximize_;
-  QPushButton* button_minimzie_;
-  QPushButton* button_restore_;
-  QPushButton* button_close_;
-  QWidget* buttons_;
-  QWidget* top_drag_area_;
-};
-
+} //namespace osx
+} //namespace detail
 } //namespace frameless
 } //namespace qtf
-
-#endif // FRAMELESS_WIDGET_H

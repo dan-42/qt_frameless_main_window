@@ -20,35 +20,88 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Copyright 2017 github.com/dfct
-Copyright 2018 github.com/dan-42
+Copyright 2021 github.com/dan-42
 */
 
-#include <qtf/frameless/detail/osx/osx_hide_title_bar.hpp>
-#include <Cocoa/Cocoa.h>
+#pragma once
+#ifndef DECORATION_WIDGET_H
+#define DECORATION_WIDGET_H
+
+#include <QWidget>
+
+class QPushButton;
 
 namespace qtf
 {
-namespace frameless
+namespace decoration
 {
-namespace detail
-{
-namespace osx
-{
-///
-///
-void osx_hide_title_bar::hide(long winid)
-{
-    NSView *nativeView = reinterpret_cast<NSView *>(winid);
-    NSWindow* nativeWindow = [nativeView window];
 
-    [nativeWindow setStyleMask:
-        [nativeWindow styleMask] | NSFullSizeContentViewWindowMask | NSWindowTitleHidden];
+class windows10 : public QWidget
+{
+  Q_OBJECT
 
-    [nativeWindow setTitlebarAppearsTransparent:YES];
-    //[nativeWindow setMovableByWindowBackground:YES];
-}
+// Structors
+public:
+  ///
+  /// \see QWidget
+  ///
+  explicit windows10(QWidget* parent = nullptr);
 
-} //namespace osx
-} //namespace detail
-} //namespace frameless
+  ///
+  ///
+  ///
+  ~windows10() noexcept;
+
+// Setters
+public:
+  ///
+  ///
+  ///
+  auto restored() -> void;
+
+  ///
+  ///
+  ///
+  auto maximized() -> void;  
+  
+// Getters
+public:
+  ///
+  ///
+  auto drag_areas() const -> std::vector<QWidget*>;
+
+// Signals
+signals:  
+  void minimize();
+  void maximize();
+  void restore();
+  void close();
+
+// Public overloads
+public:
+  ///
+  ///
+  auto setParent(QWidget* parent) -> void;
+
+// Implementation  
+private:
+  auto set_parent_impl(QWidget* parent) -> void;
+  auto update_position() -> void;
+
+// Overrides
+private:
+  auto eventFilter(QObject *object, QEvent *event) -> bool override;
+
+// Variables
+private:
+  QPushButton* button_maximize_;
+  QPushButton* button_minimzie_;
+  QPushButton* button_restore_;
+  QPushButton* button_close_;  
+  std::vector<QWidget*> drag_areas_;
+};
+
+} //namespace decoration
 } //namespace qtf
+
+#endif // DECORATION_WIDGET_H
